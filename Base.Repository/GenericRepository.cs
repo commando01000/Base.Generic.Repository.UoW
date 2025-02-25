@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Repository.Layer.Interfaces;
 using Repository.Layer.Specification;
+using System.Linq.Expressions;
 
 namespace Repository.Layer
 {
@@ -21,6 +22,11 @@ namespace Repository.Layer
         public async Task Delete(TEntity entity)
         {
             _context.Set<TEntity>().Remove(entity);
+        }
+
+        public Task<TEntity> Get(Expression<Func<TEntity, bool>> spec)
+        {
+            return _context.Set<TEntity>().FirstOrDefaultAsync(spec);
         }
 
         public async IAsyncEnumerable<TEntity> GetAll()
