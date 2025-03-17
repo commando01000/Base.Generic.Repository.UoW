@@ -133,7 +133,7 @@ namespace Repository.Layer
             }
         }
 
-        public async Task<TEntity> GetByIdWithSpecs(ISpecification<TEntity> specs)
+        public async Task<TEntity> GetWithSpecs(ISpecification<TEntity> specs)
         {
             try
             {
