@@ -19,32 +19,67 @@ namespace Repository.Layer
             _logger = logger;
         }
 
-        public async Task Create(TEntity entity)
+        public async Task<bool> Create(TEntity entity)
         {
+            if (entity == null)
+            {
+                _logger.LogWarning("Attempted to create a null entity: {EntityType}", typeof(TEntity).Name);
+                return false;
+            }
+
             try
             {
                 await _context.Set<TEntity>().AddAsync(entity);
+                return true; // Success if entity is added to context
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating entity: {EntityType}", typeof(TEntity).Name);
-                throw;
+                return false; // Failure if an exception occurs
             }
         }
 
-        public async Task Delete(TEntity entity)
+        public async Task<bool> Update(TEntity entity)
         {
+            if (entity == null)
+            {
+                _logger.LogWarning("Attempted to update a null entity: {EntityType}", typeof(TEntity).Name);
+                return false;
+            }
+
+            try
+            {
+                _context.Set<TEntity>().Update(entity);
+                return true; // Success if entity is marked for update
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating entity: {EntityType}", typeof(TEntity).Name);
+                return false; // Failure if an exception occurs
+            }
+        }
+
+        public async Task<bool> Delete(TEntity entity)
+        {
+            if (entity == null)
+            {
+                _logger.LogWarning("Attempted to delete a null entity: {EntityType}", typeof(TEntity).Name);
+                return false;
+            }
+
             try
             {
                 _context.Set<TEntity>().Remove(entity);
+                return true; // Success if entity is marked for deletion
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting entity: {EntityType}", typeof(TEntity).Name);
-                throw;
+                return false; // Failure if an exception occurs
             }
         }
 
+        // Other methods remain unchanged
         public async Task<TEntity> Get(Expression<Func<TEntity, bool>> spec)
         {
             try
@@ -66,7 +101,6 @@ namespace Repository.Layer
             }
         }
 
-        // ✅ New function: Returns untracked entities for read-only operations
         public async Task<List<TEntity>> GetAllAsNoTracking()
         {
             try
@@ -102,10 +136,9 @@ namespace Repository.Layer
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error fetching entities by condition: {EntityType}", typeof(TEntity).Name);
-                return new List<TEntity>(); // ✅ Prevents crashes
+                return new List<TEntity>();
             }
         }
-
 
         public async Task<IEnumerable<TEntity>> GetAllWithSpecs(ISpecification<TEntity> specs)
         {
@@ -149,19 +182,6 @@ namespace Repository.Layer
         public async Task<int> GetCountAsync(ISpecification<TEntity> specs)
         {
             return await SpecificationEvaluator<TEntity>.GetQuery(_context.Set<TEntity>(), specs).CountAsync();
-        }
-
-        public async Task Update(TEntity entity)
-        {
-            try
-            {
-                _context.Set<TEntity>().Update(entity);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating entity: {EntityType}", typeof(TEntity).Name);
-                throw;
-            }
         }
     }
 }
