@@ -19,23 +19,33 @@ namespace Repository.Layer
             _logger = logger;
         }
 
-        public async Task<bool> Create(TEntity entity)
+        public async Task<Guid> Create(TEntity entity)
         {
             if (entity == null)
             {
                 _logger.LogWarning("Attempted to create a null entity: {EntityType}", typeof(TEntity).Name);
-                return false;
+                return Guid.Empty; // Return empty Guid for failure
             }
 
             try
             {
                 await _context.Set<TEntity>().AddAsync(entity);
-                return true; // Success if entity is added to context
+
+                // Assume TEntity has a Guid Id property and cast it
+                var idProperty = entity.GetType().GetProperty("Id");
+                if (idProperty == null || idProperty.PropertyType != typeof(Guid))
+                {
+                    _logger.LogError("Entity {EntityType} does not have a Guid Id property", typeof(TEntity).Name);
+                    return Guid.Empty; // Failure if no Guid Id exists
+                }
+
+                var id = (Guid)idProperty.GetValue(entity);
+                return id; // Return the entity's Guid
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating entity: {EntityType}", typeof(TEntity).Name);
-                return false; // Failure if an exception occurs
+                return Guid.Empty; // Return empty Guid for failure
             }
         }
 

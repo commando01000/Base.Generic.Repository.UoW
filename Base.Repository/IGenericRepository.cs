@@ -14,8 +14,8 @@ namespace Base.Repository
         Task<TEntity> GetWithSpecs(ISpecification<TEntity> spec);
         Task<TEntity> GetById(TKey id);
         Task<TEntity> Get(Expression<Func<TEntity, bool>> spec);
-        Task<bool> Create(TEntity entity);  // Changed to Task<bool>
-        Task<bool> Update(TEntity entity);  // Changed to Task<bool>
-        Task<bool> Delete(TEntity entity);  // Changed to Task<bool>
+        Task<Guid> Create(TEntity entity);  // Changed to Task<Guid>
+        Task<bool> Update(TEntity entity);  // Remains bool
+        Task<bool> Delete(TEntity entity);  // Remains bool
     }
 }
