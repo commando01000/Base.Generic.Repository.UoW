@@ -10,6 +10,7 @@ namespace Base.Repository
         Task<List<TEntity>> GetAllAsNoTracking(); // ✅ Added
         Task<List<TEntity>> GetAllAsNoTracking(Expression<Func<TEntity, bool>> spec); // ✅ Added
         Task<IEnumerable<TEntity>> GetAllWithSpecs(ISpecification<TEntity> spec);
+        Task<int> GetCountAsync(ISpecification<TEntity> spec);
         Task<TEntity> GetWithSpecs(ISpecification<TEntity> spec);
         Task<TEntity> GetById(TKey id);
         Task<TEntity> Get(Expression<Func<TEntity, bool>> spec);

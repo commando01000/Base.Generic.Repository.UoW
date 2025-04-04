@@ -146,6 +146,11 @@ namespace Repository.Layer
             }
         }
 
+        public async Task<int> GetCountAsync(ISpecification<TEntity> specs)
+        {
+            return await SpecificationEvaluator<TEntity>.GetQuery(_context.Set<TEntity>(), specs).CountAsync();
+        }
+
         public async Task Update(TEntity entity)
         {
             try
