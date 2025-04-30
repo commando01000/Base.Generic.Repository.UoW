@@ -163,7 +163,7 @@ namespace Repository.Layer
             }
         }
 
-        public async Task<TEntity> GetById(TKey id)
+        public async Task<TEntity> Get(TKey id)
         {
             try
             {
@@ -192,6 +192,11 @@ namespace Repository.Layer
         public async Task<int> GetCountAsync(ISpecification<TEntity> specs)
         {
             return await SpecificationEvaluator<TEntity>.GetQuery(_context.Set<TEntity>(), specs).CountAsync();
+        }
+
+        public async Task<List<TEntity>> GetAllAsNoTracking(ISpecification<TEntity> spec)
+        {
+            return await SpecificationEvaluator<TEntity>.GetQuery(_context.Set<TEntity>().AsNoTracking(), spec).ToListAsync();
         }
     }
 }
