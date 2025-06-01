@@ -53,7 +53,7 @@ public class CustomerService
     public async Task AddCustomerAsync(Customer customer)
     {
         await _unitOfWork.Repository<Customer>().AddAsync(customer);
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.CompleteAsync();
     }
 }
 ```
@@ -71,7 +71,7 @@ public class CustomerService
 // Adding a new entity
 var customer = new Customer { Name = "John Doe" };
 await _unitOfWork.Repository<Customer>().AddAsync(customer);
-await _unitOfWork.SaveChangesAsync();
+await _unitOfWork.CompleteAsync();
 
 // Retrieving entities
 var customers = await _unitOfWork.Repository<Customer>().GetAllAsync();
