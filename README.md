@@ -1,67 +1,90 @@
 # Base.Generic.Repository.UoW
 
-A base implementation of the **Generic Repository** and **Unit of Work** patterns in .NET. This project provides reusable abstractions and concrete classes to simplify data access logic in your applications, following best practices for maintainability and testability.
+A lightweight, generic repository implementation with Unit of Work pattern for .NET applications. This library aims to simplify data access logic by providing reusable, extensible, and testable repository and unit of work abstractions.
 
 ## Features
 
-- **Generic Repository Pattern**: Abstracts data access logic, allowing for type-safe CRUD operations on entities.
-- **Unit of Work Pattern**: Coordinates the work of multiple repositories by ensuring a single transaction for a business operation.
-- **Specification Pattern Support**: Compose complex queries in a reusable and testable way.
-- Designed for extensibility and easy integration with Entity Framework or other ORMs.
-
-## Project Structure
-
-- `Base.Repository.sln`  
-  Solution file for the project.
-- `Base.Repository/`  
-  Main library containing:
-  - `GenericRepository.cs`  
-    Implementation of a generic repository for CRUD operations.
-  - `IGenericRepository.cs`  
-    Interface defining the contract for the generic repository.
-  - `IUnitOfWork.cs`  
-    Interface for the Unit of Work pattern.
-  - `UnitOfWork.cs`  
-    Implementation of the Unit of Work.
-  - `Specification/`  
-    (Folder for specification pattern support classes.)
+- Generic repository pattern for CRUD operations
+- Unit of Work pattern to manage database transactions
+- Easily extensible for custom repository logic
+- Supports dependency injection
+- Designed for testability
 
 ## Getting Started
 
-1. **Clone the repository:**
-   ```sh
-   git clone https://github.com/commando01000/Base.Generic.Repository.UoW.git
-   ```
+### Installation
 
-2. **Open in Visual Studio:**
-   - Open the `Base.Repository.sln` solution file.
+Add the project to your solution, or reference the compiled DLL in your .NET project.
 
-3. **Add a reference to your project:**
-   - Add the `Base.Repository` project as a dependency in your solution.
+### Usage
 
-4. **Usage Example:**
-   Implement your own repositories or use the generic repository directly:
-   ```csharp
-   public class MyEntityRepository : GenericRepository<MyEntity>, IMyEntityRepository
-   {
-       public MyEntityRepository(DbContext context) : base(context) { }
-       // Add custom methods here
-   }
-   ```
+#### 1. Configure Your DbContext
 
-## Extending
+```csharp
+public class AppDbContext : DbContext
+{
+    public DbSet<Customer> Customers { get; set; }
+    // Add other entities...
+}
+```
 
-- Implement additional repository interfaces as needed for your entities.
-- Use the Specification pattern classes to compose complex queries.
+#### 2. Register Services (using Microsoft.Extensions.DependencyInjection)
+
+```csharp
+services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
+services.AddScoped<IUnitOfWork, UnitOfWork>();
+services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+```
+
+#### 3. Inject and Use in Your Services
+
+```csharp
+public class CustomerService
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    public CustomerService(IUnitOfWork unitOfWork)
+    {
+        _unitOfWork = unitOfWork;
+    }
+
+    public async Task AddCustomerAsync(Customer customer)
+    {
+        await _unitOfWork.Repository<Customer>().AddAsync(customer);
+        await _unitOfWork.SaveChangesAsync();
+    }
+}
+```
+
+## Project Structure
+
+- **GenericRepository/**: Implements the generic repository pattern.
+- **UnitOfWork/**: Implements Unit of Work pattern.
+- **Interfaces/**: Contains repository and unit of work interfaces.
+- **Entities/**: Your domain entities go here.
+
+## Example
+
+```csharp
+// Adding a new entity
+var customer = new Customer { Name = "John Doe" };
+await _unitOfWork.Repository<Customer>().AddAsync(customer);
+await _unitOfWork.SaveChangesAsync();
+
+// Retrieving entities
+var customers = await _unitOfWork.Repository<Customer>().GetAllAsync();
+```
 
 ## Contributing
 
-Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
+Contributions are welcome! Please fork the repository and submit a pull request.
 
 ## License
 
-This project is open-source and available under the [MIT License](LICENSE).
+This project is licensed under the MIT License.
 
----
+## Contact
 
-**Author:** [commando01000](https://github.com/commando01000)
+For issues, please use the [GitHub Issues](https://github.com/commando01000/Base.Generic.Repository.UoW/issues) page.
