@@ -34,8 +34,8 @@ public class AppDbContext : DbContext
 services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
-services.AddScoped<IUnitOfWork, UnitOfWork>();
-services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+// Register UnitOfWork with AppDbContext
+services.AddScoped(typeof(IUnitOfWork<AppDbContext>), typeof(UnitOfWork<AppDbContext>));
 ```
 
 #### 3. Inject and Use in Your Services
