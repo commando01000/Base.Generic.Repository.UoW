@@ -43,9 +43,9 @@ services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 ```csharp
 public class CustomerService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IUnitOfWork<AppDbContext> _unitOfWork;
 
-    public CustomerService(IUnitOfWork unitOfWork)
+    public CustomerService(IUnitOfWork<AppDbContext> unitOfWork)
     {
         _unitOfWork = unitOfWork;
     }
