@@ -1,4 +1,5 @@
 ﻿using Base.Repository;
+using Base.Repository.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Repository.Layer.Specification;
@@ -69,6 +70,14 @@ namespace Repository.Layer
             }
         }
 
+        public async Task BulkInsertAsync(IEnumerable<TEntity> entities)
+        {
+            if (entities == null || !entities.Any())
+                return;
+
+            await _context.Set<TEntity>().AddRangeAsync(entities);
+        }
+
         public async Task<bool> Delete(TEntity entity)
         {
             if (entity == null)
@@ -88,6 +97,43 @@ namespace Repository.Layer
                 return false; // Failure if an exception occurs
             }
         }
+
+        public async Task<List<TEntity>> GetAllDynamicAsync(
+            Expression<Func<TEntity, bool>> filter = null,
+            Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
+            params Expression<Func<TEntity, object>>[] includes)
+        {
+            IQueryable<TEntity> query = _context.Set<TEntity>();
+
+            if (includes != null)
+            {
+                foreach (var include in includes)
+                    query = query.Include(include);
+            }
+
+            if (filter != null)
+                query = query.Where(filter);
+
+            if (orderBy != null)
+                query = orderBy(query);
+
+            return await query.ToListAsync();
+        }
+
+
+        public async Task<bool> SoftDeleteAsync(TKey id)
+        {
+            var entity = await Get(id);
+            if (entity == null) return false;
+
+            var prop = typeof(TEntity).GetProperty("IsDeleted");
+            if (prop == null || prop.PropertyType != typeof(bool)) return false;
+
+            prop.SetValue(entity, true);
+            _context.Set<TEntity>().Update(entity);
+            return true;
+        }
+
 
         // Other methods remain unchanged
         public async Task<TEntity> Get(Expression<Func<TEntity, bool>> spec)
@@ -163,6 +209,107 @@ namespace Repository.Layer
             }
         }
 
+        public async Task<PaginatedResult<TEntity>> GetAllPaginatedAsync(int pageIndex, int pageSize)
+        {
+            if (pageIndex <= 0) pageIndex = 1;
+            if (pageSize <= 0) pageSize = 10;
+
+            var query = _context.Set<TEntity>();
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PaginatedResult<TEntity>(totalCount, pageIndex, pageSize, items);
+        }
+
+        public async Task<List<TEntity>> GetAllWithIncludesAsync(params Expression<Func<TEntity, object>>[] includes)
+        {
+            IQueryable<TEntity> query = _context.Set<TEntity>();
+
+            if (includes != null && includes.Any())
+            {
+                foreach (var include in includes)
+                {
+                    query = query.Include(include);
+                }
+            }
+
+            return await query.ToListAsync();
+        }
+
+        public async Task<PaginatedResult<TEntity>> GetAllWithIncludesPaginatedAsync(int pageIndex, int pageSize, params Expression<Func<TEntity, object>>[] includes)
+        {
+            if (pageIndex <= 0) pageIndex = 1;
+            if (pageSize <= 0) pageSize = 10;
+
+            IQueryable<TEntity> query = _context.Set<TEntity>();
+
+            if (includes != null && includes.Any())
+            {
+                foreach (var include in includes)
+                {
+                    query = query.Include(include);
+                }
+            }
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PaginatedResult<TEntity>(totalCount, pageIndex, pageSize, items);
+        }
+
+        public async Task<TEntity> GetByIdWithIncludesAsync(TKey id, params Expression<Func<TEntity, object>>[] includes)
+        {
+            IQueryable<TEntity> query = _context.Set<TEntity>();
+
+            if (includes != null && includes.Any())
+            {
+                foreach (var include in includes)
+                {
+                    query = query.Include(include);
+                }
+            }
+
+            return await query.FirstOrDefaultAsync(e =>
+                EF.Property<TKey>(e, "Id").Equals(id)
+            );
+        }
+
+
+        public async Task<PaginatedResult<TEntity>> GetAllWithIncludesPaginatedAsNoTrackingAsync(
+            int pageIndex,
+            int pageSize,
+            params Expression<Func<TEntity, object>>[] includes)
+        {
+            if (pageIndex <= 0) pageIndex = 1;
+            if (pageSize <= 0) pageSize = 10;
+
+            IQueryable<TEntity> query = _context.Set<TEntity>().AsNoTracking();
+
+            if (includes != null && includes.Any())
+            {
+                foreach (var include in includes)
+                {
+                    query = query.Include(include);
+                }
+            }
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PaginatedResult<TEntity>(totalCount, pageIndex, pageSize, items);
+        }
+
+
         public async Task<TEntity> Get(TKey id)
         {
             try
@@ -198,5 +345,57 @@ namespace Repository.Layer
         {
             return await SpecificationEvaluator<TEntity>.GetQuery(_context.Set<TEntity>().AsNoTracking(), spec).ToListAsync();
         }
+
+        public async Task<PaginatedResult<TEntity>> GetAllPaginatedAsNoTrackingAsync(int pageIndex, int pageSize)
+        {
+            if (pageIndex <= 0) pageIndex = 1;
+            if (pageSize <= 0) pageSize = 10;
+
+            var query = _context.Set<TEntity>().AsNoTracking();
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PaginatedResult<TEntity>(totalCount, pageIndex, pageSize, items);
+        }
+
+        public async Task<PaginatedResult<TEntity>> GetAllWithSpecsPaginatedAsync(
+            ISpecification<TEntity> spec,
+            int pageIndex,
+            int pageSize)
+        {
+            if (pageIndex <= 0) pageIndex = 1;
+            if (pageSize <= 0) pageSize = 10;
+
+            var query = SpecificationEvaluator<TEntity>.GetQuery(_context.Set<TEntity>().AsQueryable(), spec);
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PaginatedResult<TEntity>(totalCount, pageIndex, pageSize, items);
+        }
+
+
+        public async Task<bool> ExistsAsync(Expression<Func<TEntity, bool>> predicate)
+        {
+            return await _context.Set<TEntity>().AnyAsync(predicate);
+        }
+
+        public async Task<int> CountAsync()
+        {
+            return await _context.Set<TEntity>().CountAsync();
+        }
+
+        public async Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate)
+        {
+            return await _context.Set<TEntity>().CountAsync(predicate);
+        }
+
     }
 }
