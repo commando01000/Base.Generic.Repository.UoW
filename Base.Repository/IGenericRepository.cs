@@ -86,8 +86,8 @@ namespace Base.Repository
         // Set-based operations (EF Core 7+/8)
         Task<int> DeleteWhereAsync(Expression<Func<TEntity, bool>> predicate);
         Task<int> UpdateWhereAsync(
-            Expression<Func<TEntity, bool>> predicate,
-            Func<SetPropertyCalls<TEntity>, SetPropertyCalls<TEntity>> setProps);
+                    Expression<Func<TEntity, bool>> predicate,
+                    Expression<Func<SetPropertyCalls<TEntity>, SetPropertyCalls<TEntity>>> setProps);
 
         // Soft-delete bulk helper
         Task<int> SoftDeleteWhereAsync(Expression<Func<TEntity, bool>> predicate);

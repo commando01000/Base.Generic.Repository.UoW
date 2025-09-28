@@ -423,20 +423,20 @@ namespace Repository.Layer
             => _context.Set<TEntity>().Where(predicate).ExecuteDeleteAsync();
 
         // after:
-        public Task<int> UpdateWhereAsync(
+        public async Task<int> UpdateWhereAsync(
             Expression<Func<TEntity, bool>> predicate,
             Expression<Func<SetPropertyCalls<TEntity>, SetPropertyCalls<TEntity>>> setProps)
-            => _context.Set<TEntity>().Where(predicate).ExecuteUpdateAsync(setProps);
+            => await _context.Set<TEntity>().Where(predicate).ExecuteUpdateAsync(setProps);
 
-        public Task<int> SoftDeleteWhereAsync(Expression<Func<TEntity, bool>> predicate)
+        public async Task<int> SoftDeleteWhereAsync(Expression<Func<TEntity, bool>> predicate)
         {
-            return _context.Set<TEntity>()
+            return await _context.Set<TEntity>()
                 .Where(predicate)
                 .ExecuteUpdateAsync(s => s.SetProperty(e => EF.Property<bool>(e, "IsDeleted"), _ => true));
         }
 
-        public Task<bool> ExistsByIdAsync(TKey id)
-            => _context.Set<TEntity>().AnyAsync(e => EF.Property<TKey>(e, "Id")!.Equals(id));
+        public async Task<bool> ExistsByIdAsync(TKey id)
+            => await _context.Set<TEntity>().AnyAsync(e => EF.Property<TKey>(e, "Id")!.Equals(id));
 
         public async Task<List<TEntity>> GetByIdsAsync(IEnumerable<TKey> ids, bool asNoTracking = true)
         {
@@ -518,9 +518,6 @@ namespace Repository.Layer
             return await query.ToListAsync();
         }
 
-        public Task<int> UpdateWhereAsync(Expression<Func<TEntity, bool>> predicate, Func<SetPropertyCalls<TEntity>, SetPropertyCalls<TEntity>> setProps)
-        {
-            throw new NotImplementedException();
-        }
+
     }
 }
