@@ -15,8 +15,8 @@ namespace Base.Repository.Utilities
         public bool HasPreviousPage { get => PageIndex > 1; }
         public bool HasNextPage { get => PageIndex < TotalCount; }
 
-        public IEnumerable<TEntity> Items { get; set; }
-        public PaginatedResult(int totalCount, int pageIndex, int pageSize, IEnumerable<TEntity> items)
+        public IReadOnlyList<TEntity> Items { get; set; }
+        public PaginatedResult(int totalCount, int pageIndex, int pageSize, IReadOnlyList<TEntity> items)
         {
             TotalCount = totalCount;
             PageIndex = pageIndex;
