@@ -90,7 +90,7 @@ namespace Base.Repository
             Func<SetPropertyCalls<TEntity>, SetPropertyCalls<TEntity>> setProps);
 
         // Soft-delete bulk helper
-        Task<int> SoftDeleteWhereAsync(Expression<Func<TEntity, bool>> predicate, string isDeletedProperty = "IsDeleted");
+        Task<int> SoftDeleteWhereAsync(Expression<Func<TEntity, bool>> predicate);
 
         // Identity helpers
         Task<bool> ExistsByIdAsync(TKey id);

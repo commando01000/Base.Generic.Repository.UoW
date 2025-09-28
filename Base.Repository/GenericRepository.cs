@@ -517,5 +517,10 @@ namespace Repository.Layer
 
             return await query.ToListAsync();
         }
+
+        public Task<int> UpdateWhereAsync(Expression<Func<TEntity, bool>> predicate, Func<SetPropertyCalls<TEntity>, SetPropertyCalls<TEntity>> setProps)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
